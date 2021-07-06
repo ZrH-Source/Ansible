@@ -1,0 +1,68 @@
+---
+
+- hosts: local
+
+  tasks:
+
+    - name: Update Kali
+      when:
+        - ansible_facts['nodename'] == 'kali'
+      become: yes
+      vars:
+        ansible_become_pass: kali
+      apt:
+        update_cache: yes
+    
+    - name: Update Raspberry
+      when:
+        - ansible_facts['nodename'] == 'raspberrypi'
+      become: yes
+      vars:
+        ansible_become_pass: raspberry
+      apt:
+        update_cache: yes
+    
+    - name: Dependencies installation on Kali
+      when:
+        - ansible_facts['nodename'] == 'kali'
+      apt: name={{ item }} update_cache=yes state=latest
+      become: yes
+      vars:
+        ansible_become_pass: kali # Mot de passe SU de kali
+      with_items:
+      - git
+      - vim
+
+    - name: Dependencies installation on RPI
+      when:
+        - ansible_facts['nodename'] == 'raspberrypi'
+      apt: name={{ item }} update_cache=yes state=latest
+      become: yes
+      vars:
+        ansible_become_pass: raspberry # Mot de passe SU du raspberry
+      with_items:
+      - git
+      - vim
+
+    - name: Clone some repository for Kali
+      when:
+        - ansible_facts['nodename'] == 'kali'
+      git:
+        repo: 'https://github.com/{{ item }}'
+        dest: '/home/kali/{{ item }}'
+      with_items:
+      - ZrH-Source/Github-Notifier
+      - ZrH-Source/Github-Notifier-Demo
+      - scateu/kalibrate-hackrf
+
+    - name: Clone some repository for RPI
+      when:
+        - ansible_facts['nodename'] == 'raspberrypi'
+      git:
+        repo: 'https://github.com/{{ item }}'
+        dest: '/home/pi/{{ item }}'
+      with_items:
+      - ZrH-Source/Github-Notifier
+      - scateu/kalibrate-hackrf
+      - alecs297/discord-testflight-watcher
+
